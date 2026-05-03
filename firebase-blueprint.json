@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "notificationsEnabled": { "type": "boolean" },
+            "theme": { "type": "string" }
+          }
+        }
+      },
+      "required": ["email"]
+    },
+    "Space": {
+      "title": "Space",
+      "description": "A collaborative workspace for tasks",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId", "createdAt"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "A member of a space",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["owner", "admin", "member"] },
+        "email": { "type": "string" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Subtask": {
+      "title": "Subtask",
+      "description": "A smaller item within a task",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "completed", "createdAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A comment on a task for collaboration",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "authorId", "createdAt"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "A record of an action performed in the workspace",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "targetId": { "type": "string" },
+        "targetTitle": { "type": "string" },
+        "type": { "type": "string", "enum": ["task", "member", "space", "comment"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task within a space",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "status": { "type": "string", "enum": ["todo", "in_progress", "done"] },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "categoryId": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "recurringRule": { "type": "string" },
+        "dependencies": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "status", "priority", "creatorId", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Task category",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user profiles"
+    },
+    "/spaces/{spaceId}": {
+      "schema": "Space",
+      "description": "Multi-user workspace"
+    },
+    "/spaces/{spaceId}/members/{userId}": {
+      "schema": "Member",
+      "description": "Membership in a workspace"
+    },
+    "/spaces/{spaceId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Tasks in a workspace"
+    },
+    "/spaces/{spaceId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Categories for tasks in a workspace"
+    },
+    "/spaces/{spaceId}/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "Log of actions in the workspace"
+    },
+    "/spaces/{spaceId}/tasks/{taskId}/subtasks/{subtaskId}": {
+      "schema": "Subtask",
+      "description": "Subtasks for a specific task"
+    },
+    "/spaces/{spaceId}/tasks/{taskId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Collaborative comments on a task"
+    }
+  }
+}

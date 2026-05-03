@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isSpaceMember(spaceId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/spaces/$(spaceId)/members/$(request.auth.uid));
+    }
+
+    function isSpaceAdmin(spaceId) {
+      let member = get(/databases/$(database)/documents/spaces/$(spaceId)/members/$(request.auth.uid));
+      return member != null && (member.data.role == 'admin' || member.data.role == 'owner');
+    }
+
+    function isValidId(id) {
+       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- USERS ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+
+    // --- SPACES ---
+    match /spaces/{spaceId} {
+      allow read: if isSpaceMember(spaceId);
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSpaceAdmin(spaceId);
+
+      // Members subcollection
+      match /members/{memberId} {
+        allow read: if isSpaceMember(spaceId);
+        allow write: if isSpaceAdmin(spaceId) || (isOwner(memberId) && request.resource.data.role == resource.data.role);
+      }
+
+      // Tasks subcollection
+      match /tasks/{taskId} {
+        allow read: if isSpaceMember(spaceId);
+        allow create: if isSpaceMember(spaceId) && request.resource.data.creatorId == request.auth.uid;
+        allow update, delete: if isSpaceMember(spaceId);
+      }
+
+      // Categories subcollection
+      match /categories/{categoryId} {
+        allow read: if isSpaceMember(spaceId);
+        allow write: if isSpaceMember(spaceId);
+      }
+      // Activities subcollection
+      match /activities/{activityId} {
+        allow read: if isSpaceMember(spaceId);
+        allow create: if isSpaceMember(spaceId);
+      }
+    }
+  }
+}
